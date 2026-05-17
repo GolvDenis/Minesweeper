@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace ClassLibrary1.Enums
 {
-    internal class CellState
+    public enum CellState
     {
+        Hidden = 0,
+        Revealed = 1,
+        Flagged = 2
     }
 }
