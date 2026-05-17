@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace ClassLibrary1.Enums
 {
-    internal class DifficultyLevel
+    public enum DifficultyLevel
     {
+        Easy = 0,
+        Medium = 1,
+        Hard = 2,
     }
 }
