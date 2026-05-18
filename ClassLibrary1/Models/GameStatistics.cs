@@ -45,3 +45,4 @@ namespace ClassLibrary1.Models
             LastPlayedAt = DateTimeOffset.UtcNow;
         }
     }
+}

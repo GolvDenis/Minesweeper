@@ -9,7 +9,7 @@ namespace ClassLibrary1.Models
 {
     public class GameSession
     {
-        public GameBoard Board { get; }
+        public GameBoard Board { get; private set; }
         public GameSettings Settings { get; }
 
         public GameStatus Status { get; set; }
@@ -17,10 +17,10 @@ namespace ClassLibrary1.Models
         public DateTimeOffset? EndedAt { get; set; }
         public int FlaggedCellsCount { get; set; }
 
-        public GameSession(GameSettings settings)
+        public GameSession(GameSettings settings, GameBoard board = null)
         {
             Settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            Board = new GameBoard(settings.Rows, settings.Columns);
+            Board = board ?? new GameBoard(settings.Rows, settings.Columns);
             Status = GameStatus.NotStarted;
         }
 
