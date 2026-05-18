@@ -11,7 +11,6 @@ namespace ClassLibrary1.Enums
         NotStarted = 0,
         Running = 1,
         Won = 2,
-        Lost = 3,
-        Paused = 4
+        Lost = 3
     }
 }

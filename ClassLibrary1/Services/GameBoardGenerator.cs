@@ -17,31 +17,48 @@ namespace ClassLibrary1.Services
             _random = random ?? Random.Shared;
         }
 
-        public GameBoard Generate(GameSettings settings)
+        public GameBoard Generate(GameSettings settings, int safeRow, int safeColumn)
         {
             ArgumentNullException.ThrowIfNull(settings);
 
             var board = new GameBoard(settings.Rows, settings.Columns);
 
-            PlaceMines(board, settings.Mines);
+            var excluded = new HashSet<(int Row, int Column)>();
+
+            for (int r = safeRow - 1; r <= safeRow + 1; r++)
+            {
+                for (int c = safeColumn - 1; c <= safeColumn + 1; c++)
+                {
+                    if (board.IsInside(r, c))
+                    {
+                        excluded.Add((r, c));
+                    }
+                }
+            }
+
+            var positions = GetAllPositions(board.Rows, board.Columns)
+                .Where(position => !excluded.Contains(position))
+                .ToList();
+
+            if (settings.Mines > positions.Count)
+            {
+                throw new ArgumentException("Too many mines for the selected board size.");
+            }
+
+            Shuffle(positions);
+
+            for (int i = 0; i < settings.Mines; i++)
+            {
+                var (row, column) = positions[i];
+                board.GetCell(row, column).PlaceMine();
+            }
+
             CalculateAdjacentMineCounts(board);
 
             return board;
         }
 
-        private void PlaceMines(GameBoard board, int mineCount)
-        {
-            var positions = GetAllPositions(board.Rows, board.Columns);
-            Shuffle(positions);
-
-            for (int i = 0; i < mineCount; i++)
-            {
-                var (row, column) = positions[i];
-                board.GetCell(row, column).PlaceMine();
-            }
-        }
-
-        private void CalculateAdjacentMineCounts(GameBoard board)
+        private static void CalculateAdjacentMineCounts(GameBoard board)
         {
             foreach (var cell in board.GetAllCells())
             {
@@ -51,26 +68,24 @@ namespace ClassLibrary1.Services
                     continue;
                 }
 
-                int mineCount = board.GetNeighbors(cell.Row, cell.Column)
-                    .Count(neighbor => neighbor.HasMine);
-
-                cell.SetAdjacentMines(mineCount);
+                var count = board.GetNeighbors(cell.Row, cell.Column).Count(neighbor => neighbor.HasMine);
+                cell.SetAdjacentMines(count);
             }
         }
 
-        private List<(int Row, int Column)> GetAllPositions(int rows, int columns)
+        private static List<(int Row, int Column)> GetAllPositions(int rows, int columns)
         {
-            var positions = new List<(int Row, int Column)>(rows * columns);
+            var result = new List<(int Row, int Column)>(rows * columns);
 
             for (int row = 0; row < rows; row++)
             {
                 for (int column = 0; column < columns; column++)
                 {
-                    positions.Add((row, column));
+                    result.Add((row, column));
                 }
             }
 
-            return positions;
+            return result;
         }
 
         private void Shuffle<T>(IList<T> items)

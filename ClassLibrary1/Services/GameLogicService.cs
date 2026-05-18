@@ -21,16 +21,7 @@ namespace ClassLibrary1.Services
         public GameSession StartNewGame(GameSettings settings)
         {
             ArgumentNullException.ThrowIfNull(settings);
-
-            var session = new GameSession(settings, _boardGenerator.Generate(settings))
-            {
-                Status = GameStatus.Running,
-                StartedAt = DateTimeOffset.UtcNow,
-                EndedAt = null,
-                FlaggedCellsCount = 0
-            };
-
-            return session;
+            return new GameSession(settings);
         }
 
         public void RevealCell(GameSession session, int row, int column)
@@ -45,6 +36,14 @@ namespace ClassLibrary1.Services
             if (!session.Board.IsInside(row, column))
             {
                 return;
+            }
+
+            if (!session.IsBoardGenerated)
+            {
+                session.Board = _boardGenerator.Generate(session.Settings, row, column);
+                session.IsBoardGenerated = true;
+                session.Status = GameStatus.Running;
+                session.StartedAt = DateTimeOffset.UtcNow;
             }
 
             var startCell = session.Board.GetCell(row, column);
@@ -82,6 +81,11 @@ namespace ClassLibrary1.Services
                 return;
             }
 
+            if (!session.IsBoardGenerated)
+            {
+                return;
+            }
+
             if (!session.Board.IsInside(row, column))
             {
                 return;
@@ -111,6 +115,11 @@ namespace ClassLibrary1.Services
         {
             ValidateSession(session);
 
+            if (!session.IsBoardGenerated)
+            {
+                return false;
+            }
+
             foreach (var cell in session.Board.GetAllCells())
             {
                 if (!cell.HasMine && !cell.IsRevealed)
@@ -130,7 +139,6 @@ namespace ClassLibrary1.Services
             while (queue.Count > 0)
             {
                 var (currentRow, currentColumn) = queue.Dequeue();
-                var currentCell = session.Board.GetCell(currentRow, currentColumn);
 
                 foreach (var neighbor in session.Board.GetNeighbors(currentRow, currentColumn))
                 {
@@ -141,12 +149,7 @@ namespace ClassLibrary1.Services
 
                     neighbor.Reveal();
 
-                    if (neighbor.HasMine)
-                    {
-                        continue;
-                    }
-
-                    if (neighbor.AdjacentMines == 0)
+                    if (!neighbor.HasMine && neighbor.AdjacentMines == 0)
                     {
                         queue.Enqueue((neighbor.Row, neighbor.Column));
                     }
@@ -178,6 +181,8 @@ namespace ClassLibrary1.Services
         {
             ArgumentNullException.ThrowIfNull(session);
             ArgumentNullException.ThrowIfNull(session.Board);
+            ArgumentNullException.ThrowIfNull(session.Settings);
         }
+
     }
 }

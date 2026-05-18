@@ -9,6 +9,6 @@ namespace ClassLibrary1.Interfaces
 {
     public interface IGameBoardGenerator
     {
-        GameBoard Generate(GameSettings settings);
+        GameBoard Generate(GameSettings settings, int safeRow, int safeColumn);
     }
 }
